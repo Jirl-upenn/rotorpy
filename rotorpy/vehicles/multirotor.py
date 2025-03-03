@@ -332,7 +332,7 @@ class Multirotor(object):
             w_err = state['w'] - control['cmd_w']
 
             # Computed commanded moment based on the attitude error and body rate error
-            wdot_cmd = -self.k_w*w_err
+            wdot_cmd = self.k_w*w_err
             cmd_moment = self.inertia@wdot_cmd
 
             # Now proceed with the cmd_ctbm formulation.
