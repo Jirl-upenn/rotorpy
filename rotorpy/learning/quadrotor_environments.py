@@ -168,10 +168,15 @@ class QuadrotorEnv(gym.Env):
             self.quad_obj = Quadrotor(self.ax, wind=True, color=np.random.choice(colors), wind_scale_factor=5)
             self.world_artists = None
             self.title_artist = self.ax.set_title('t = {}'.format(self.t))
+            self.point_artist = None
+            self.point_des = [0, 0, 0]
 
         self.rendering = False   # Bool for tracking when the renderer is actually rendering a frame. 
 
-        return 
+        return
+    
+    def update_point(self, point):
+        self.point_des = point
 
     def render(self):
         if self.render_mode == '3D':
@@ -437,7 +442,12 @@ class QuadrotorEnv(gym.Env):
 
         if self.world_artists is None and not ('x' in self.ax.get_xlabel()):
             self.world_artists = self.world.draw(self.ax)
-            self.ax.plot(0, 0, 0, 'go')
+
+        if self.point_artist is None:
+            self.point_artist, = self.ax.plot(self.point_des[0], self.point_des[1], self.point_des[2], 'go')
+        else:
+            self.point_artist.set_data([self.point_des[0]], [self.point_des[1]])
+            self.point_artist.set_3d_properties([self.point_des[2]])
 
         self.quad_obj.transform(position=plot_position, rotation=plot_rotation, wind=plot_wind)
         self.title_artist.set_text('t = {:.2f}'.format(self.t))
