@@ -55,7 +55,7 @@ class QuadrotorEnv(gym.Env):
                  control_mode = 'cmd_vel',
                  reward_fn = hover_reward,            
                  quad_params = crazyflie_params,                   
-                 max_time = 10,                # Maximum time to run the simulation for in a single session.
+                 max_time = 10,               # Maximum time to run the simulation for in a single session.
                  wind_profile = None,         # wind profile object, if none is supplied it will choose no wind. 
                  world        = None,         # The world object
                  sim_rate = 100,              # The update frequency of the simulator in Hz
@@ -132,7 +132,7 @@ class QuadrotorEnv(gym.Env):
         self.max_yaw_br = 3.0
 
         # Set the maximum speed command (this is hand selected), m/s
-        self.max_vel = 3/math.sqrt(3)   # Selected so that at most the max speed is 3 m/s
+        self.max_vel = 3 / math.sqrt(3)   # Selected so that at most the max speed is 3 m/s
 
         ###################################################################################################
 
@@ -359,7 +359,7 @@ class QuadrotorEnv(gym.Env):
                 control_dict['cmd_moment'] = np.array([cmd_roll_moment, cmd_pitch_moment, cmd_yaw_moment])
             
             elif self.control_mode == 'cmd_ctbr':
-                # Scale action to min and max thrust.
+                # Scale action to min and max thrust
                 cmd_thrust = np.interp(action[0], [-1, 1], [self.quadrotor.num_rotors*self.min_thrust, self.quadrotor.num_rotors*self.max_thrust])
 
                 # Scale the body rates. 

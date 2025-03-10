@@ -117,7 +117,7 @@ class Multirotor(object):
         self.weight = np.array([0, 0, -self.mass*self.g])
 
         # Control allocation
-        k = self.k_m/self.k_eta  # Ratio of torque to thrust coefficient. 
+        k = self.k_m/self.k_eta  # Ratio of torque to thrust coefficient.
 
         # Below is an automated generation of the control allocator matrix. It assumes that all thrust vectors are aligned
         # with the z axis.
@@ -165,7 +165,7 @@ class Multirotor(object):
         def s_dot_fn(t, s):
             return self._s_dot_fn(t, s, cmd_rotor_speeds)
         s = Multirotor._pack_state(state)
-        
+
         s_dot = s_dot_fn(0, s)
         v_dot = s_dot[3:6]
         w_dot = s_dot[10:13]
@@ -182,6 +182,7 @@ class Multirotor(object):
         cmd_rotor_speeds = self.get_cmd_motor_speeds(state, control)
 
         # The true motor speeds can not fall below min and max speeds.
+        cmd_rotor_speeds += np.random.normal(scale=np.abs(self.motor_noise), size=(self.num_rotors,))
         cmd_rotor_speeds = np.clip(cmd_rotor_speeds, self.rotor_speed_min, self.rotor_speed_max) 
 
         # Form autonomous ODE for constant inputs and integrate one time step.
@@ -201,7 +202,6 @@ class Multirotor(object):
         state['q'] = state['q'] / norm(state['q'])
 
         # Add noise to the motor speed measurement
-        state['rotor_speeds'] += np.random.normal(scale=np.abs(self.motor_noise), size=(self.num_rotors,))
         state['rotor_speeds'] = np.clip(state['rotor_speeds'], self.rotor_speed_min, self.rotor_speed_max)
 
         return state
