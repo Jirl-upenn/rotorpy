@@ -1,3 +1,4 @@
+import os, re
 import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
@@ -158,7 +159,9 @@ plt.title("Evolution of actions over time")
 plt.grid(True)
 
 # Save the plot as pdf
-plt.savefig("actions_evolution.pdf")
-plt.savefig("actions_evolution.svg")
+folder_path = re.sub(r'model_\d+\.pt', 'figures', model_path)
+os.makedirs(folder_path, exist_ok=True)
+plt.savefig(os.path.join(folder_path, 'actions.pdf'))
+plt.savefig(os.path.join(folder_path, 'actions.svg'))
 
 plt.show()
