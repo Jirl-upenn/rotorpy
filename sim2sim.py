@@ -8,7 +8,8 @@ from rotorpy.learning.quadrotor_reward_functions import hover_reward
 from rotorpy.controllers.policy_controller import PolicyControl
 
 # Load the model for the appropriate epoch
-model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/quadcopter_direct/2025-02-27_02-15-30/model_4550.pt'
+# model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/quadcopter_direct/2025-02-27_02-15-30/model_4550.pt'
+model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/quadcopter_direct/2025-03-04_01-02-56/model_4999.pt'
 policy = PolicyControl(quad_params, model_path)
 print(f"Loading model from the path {model_path}")
 
@@ -161,7 +162,7 @@ plt.grid(True)
 # Save the plot as pdf
 folder_path = re.sub(r'model_\d+\.pt', 'figures', model_path)
 os.makedirs(folder_path, exist_ok=True)
-plt.savefig(os.path.join(folder_path, 'actions.pdf'))
-plt.savefig(os.path.join(folder_path, 'actions.svg'))
+for ext in ['pdf', 'svg', 'png']:
+    plt.savefig(os.path.join(folder_path, f'actions.{ext}'))
 
 plt.show()
