@@ -36,10 +36,10 @@ Inputs:
 
 """
 env = gym.make("Quadrotor-v0", 
-                control_mode ='cmd_motor_speeds', 
+                control_mode ='cmd_ctbr', 
                 reward_fn = hover_reward,
                 quad_params = quad_params,
-                max_time = 5,
+                max_time = 1,
                 world = None,
                 sim_rate = 100,
                 render_mode='3D',
@@ -51,7 +51,7 @@ env = gym.make("Quadrotor-v0",
 observation, info = env.reset(options={'initial_state': 'random'})
 
 # Number of timesteps
-T = 300
+T = 400
 time = np.arange(T)*(1/100)      # Just for plotting purposes.
 position = np.zeros((T, 3))      # Just for plotting purposes. 
 velocity = np.zeros((T, 3))      # Just for plotting purposes.
@@ -74,12 +74,35 @@ for i in range(T):
             'yaw_dot': 0, 
             'yaw_ddot': 0}
     control_dict = controller.update(0, state, flat)
+    print(f'cmd_motor_speeds: {control_dict["cmd_motor_speeds"]}')
+    print(f'cmd_motor_thrusts: {control_dict["cmd_motor_thrusts"]}')
+    print(f'cmd_thrust: {control_dict["cmd_thrust"]}')
+    print(f'cmd_moment: {control_dict["cmd_moment"]}')
+    print(f'cmd_q: {control_dict["cmd_q"]}')
+    print(f'cmd_w: {control_dict["cmd_w"]}')
+    print(f'cmd_v: {control_dict["cmd_v"]}')
+    print(f'cmd_acc: {control_dict["cmd_acc"]}')
 
-    # Extract the commanded motor speeds.
-    cmd_motor_speeds = control_dict['cmd_motor_speeds']
+    # # Extract the commanded motor speeds.
+    # cmd_motor_speeds = control_dict['cmd_ctbr']
 
-    # The environment expects the control inputs to all be within the range [-1,1]
-    action = np.interp(cmd_motor_speeds, [env.unwrapped.rotor_speed_min, env.unwrapped.rotor_speed_max], [-1,1])
+    # # The environment expects the control inputs to all be within the range [-1,1]
+    # action = np.interp(cmd_motor_speeds, [env.unwrapped.rotor_speed_min, env.unwrapped.rotor_speed_max], [-1,1])
+
+    cmd_thrust = control_dict['cmd_thrust']
+    cmd_thrust = np.interp(cmd_thrust,
+                           [quad_params['num_rotors'] * env.unwrapped.min_thrust,
+                            quad_params['num_rotors'] * env.unwrapped.max_thrust],
+                           [-1,1])
+
+    cmd_w = control_dict['cmd_w']
+    cmd_w[0] = np.interp(cmd_w[0], [-env.unwrapped.max_roll_br, env.unwrapped.max_roll_br], [-1,1])
+    cmd_w[1] = np.interp(cmd_w[1], [-env.unwrapped.max_pitch_br, env.unwrapped.max_pitch_br], [-1,1])
+    cmd_w[2] = np.interp(cmd_w[2], [-env.unwrapped.max_yaw_br, env.unwrapped.max_yaw_br], [-1,1])
+
+    action = np.array([cmd_thrust, *cmd_w])
+    print(f'action: {action}')
+    print()
 
     ###### Alternatively, we could just randomly sample the action space. 
 #     action = np.random.uniform(low=-1, high=1, size=(4,))

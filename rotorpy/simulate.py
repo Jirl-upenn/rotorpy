@@ -125,14 +125,14 @@ def simulate(world, initial_state, vehicle, controller, trajectory, wind_profile
         imu_measurements.append(imu.measurement(state[-1], state_dot, with_noise=True))
         imu_gt.append(imu.measurement(state[-1], state_dot, with_noise=False))
 
-    time    = np.array(time, dtype=float)    
-    state   = merge_dicts(state)
-    imu_measurements = merge_dicts(imu_measurements)
-    imu_gt = merge_dicts(imu_gt)
+    time               = np.array(time, dtype=float)
+    state              = merge_dicts(state)
+    imu_measurements   = merge_dicts(imu_measurements)
+    imu_gt             = merge_dicts(imu_gt)
     mocap_measurements = merge_dicts(mocap_measurements)
-    control         = merge_dicts(control)
-    flat            = merge_dicts(flat)
-    state_estimate  = merge_dicts(state_estimate)
+    control            = merge_dicts(control)
+    flat               = merge_dicts(flat)
+    state_estimate     = merge_dicts(state_estimate)
 
     return (time, state, control, flat, imu_measurements, imu_gt, mocap_measurements, state_estimate, exit_status)
 

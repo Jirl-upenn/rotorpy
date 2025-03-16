@@ -19,11 +19,13 @@ class Actor(nn.Module):
         return self.actor(x)
 
 class PolicyControl(object):
-    def __init__(self, vehicle, model_path, device="cpu"):
+    def __init__(self, vehicle, model_path, scale_output=True, device="cpu"):
         self.quadrotor = vehicle
         self.device = torch.device(device)
         self.obs_dim = 1 + 3 + 9 + 3 + 3 + 4
         self.action_dim = 4
+
+        self.scale_output = scale_output
 
         self.last_actions = torch.zeros(self.action_dim, device=self.device)
 
@@ -35,6 +37,25 @@ class PolicyControl(object):
         self.model.load_state_dict(actor_state_dict, strict=False)
 
         self.model.eval()
+
+        ######  Min/max values for scaling control outputs.
+
+        self.rotor_speed_max = self.quadrotor['rotor_speed_max']
+        self.rotor_speed_min = self.quadrotor['rotor_speed_min']
+
+        # Compute the min/max thrust by assuming the rotor is spinning at min/max speed. (also generalizes to bidirectional rotors)
+        self.max_thrust = self.quadrotor['k_eta'] * self.rotor_speed_max**2
+        self.min_thrust = self.quadrotor['k_eta'] * self.rotor_speed_min**2
+
+        # Find the maximum moment on each axis, N-m
+        self.max_roll_moment = self.max_thrust * np.abs(self.quadrotor['rotor_pos']['r1'][1])
+        self.max_pitch_moment = self.max_thrust * np.abs(self.quadrotor['rotor_pos']['r1'][0])
+        self.max_yaw_moment = self.quadrotor['k_m'] * self.rotor_speed_max**2
+
+        # Set the maximum body rate on each axis (this is hand selected), rad/s
+        self.max_roll_br = 7.0
+        self.max_pitch_br = 7.0 
+        self.max_yaw_br = 3.0
 
     def update(self, _, state, flat_output):
         """
@@ -82,25 +103,31 @@ class PolicyControl(object):
         actions = np.clip(actions, -1, 1)
         self.last_actions = torch.tensor(actions, device=self.device)
 
-        # output = self.quadrotor.rescale_action(output)
-        # output = [output["cmd_thrust"], output["cmd_w"][0], output["cmd_w"][1], output["cmd_w"][2]]
-
+        num_rotors = self.quadrotor['num_rotors']
         cmd_thrust = actions[0]
-        cmd_w = actions[1:]
+        cmd_w = -np.array([actions[1], actions[2], actions[3]])
 
-        # Unused controllers
-        cmd_motor_speeds = np.zeros((4,))
-        cmd_motor_thrusts = np.zeros((4,))
-        cmd_moment = np.zeros((3,))
-        cmd_q = np.array([0, 0, 0, 1])
-        cmd_v = np.zeros((3,))
+        if self.scale_output:
+            cmd_thrust = np.interp(cmd_thrust,
+                                   [-1, 1],
+                                   [num_rotors * self.min_thrust, num_rotors * self.max_thrust])
 
-        control_input = {'cmd_motor_speeds': cmd_motor_speeds,
-                         'cmd_motor_thrusts': cmd_motor_thrusts,
+            cmd_w[0] = np.interp(cmd_w[0],
+                                 [-1, 1],
+                                 [-self.max_roll_br, self.max_roll_br])
+            cmd_w[1] = np.interp(cmd_w[1],
+                                 [-1, 1],
+                                 [-self.max_pitch_br, self.max_pitch_br])
+            cmd_w[2] = np.interp(cmd_w[2],
+                                 [-1, 1],
+                                 [-self.max_yaw_br, self.max_yaw_br])
+
+        control_input = {'cmd_motor_speeds': np.zeros((4,)),
+                         'cmd_motor_thrusts': np.zeros((4,)),
                          'cmd_thrust': cmd_thrust,
-                         'cmd_moment': cmd_moment,
-                         'cmd_q': cmd_q,
+                         'cmd_moment': np.zeros((3,)),
+                         'cmd_q': np.array([0, 0, 0, 1]),
                          'cmd_w': cmd_w,
-                         'cmd_v': cmd_v}
+                         'cmd_v': np.zeros((3,))}
 
         return control_input

@@ -55,5 +55,4 @@ quad_params = {
     'rotor_speed_min': 0,       # rad/s
     'rotor_speed_max': 2500,    # rad/s
     'motor_noise_std': 0,     # rad/s
-
 }
