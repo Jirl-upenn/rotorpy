@@ -42,7 +42,7 @@ class SE3Control(object):
         self.k_flap          = quad_params['k_flap']    # Flapping moment coefficient Nm/(m/s)
 
         # Motor parameters
-        self.tau_m           = quad_params['tau_m']     # motor reponse time, seconds
+        self.tau_m           = quad_params['tau_m']     # motor response time, seconds
 
         # You may define any additional constants you like including control gains.
         self.inertia = np.array([[self.Ixx, self.Ixy, self.Ixz],
