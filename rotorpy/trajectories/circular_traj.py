@@ -3,7 +3,7 @@ import sys
 
 class CircularTraj(object):
     """
-    A circle. 
+    A circle.
     """
     def __init__(self, center=np.array([0,0,0]), radius=1, freq=0.2, yaw_bool=False, plane='XY', direction='CCW'):
         """
@@ -15,8 +15,8 @@ class CircularTraj(object):
             radius, the radius of the circle (m)
             freq, the frequency with which a circle is completed (Hz)
             yaw_bool, determines if yaw motion is desired
-            plane, the plane with which the circle lies on, 'XY', 'YZ', or 'XZ' 
-            direcition, the direction of the circle, 'CCW' or 'CW'
+            plane, the plane with which the circle lies on, 'XY', 'YZ', or 'XZ'
+            direction, the direction of the circle, 'CCW' or 'CW'
         """
 
         # Check and assign inputs
