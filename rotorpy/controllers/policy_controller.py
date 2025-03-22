@@ -6,7 +6,7 @@ from scipy.spatial.transform import Rotation
 class Actor(nn.Module):
     def __init__(self, obs_dim, action_dim):
         super(Actor, self).__init__()
-        
+
         self.actor = nn.Sequential(
             nn.Linear(obs_dim, 64),
             nn.ELU(),
@@ -54,13 +54,13 @@ class PolicyControl(object):
 
         # Set the maximum body rate on each axis (this is hand selected), rad/s
         self.max_roll_br = 7.0
-        self.max_pitch_br = 7.0 
+        self.max_pitch_br = 7.0
         self.max_yaw_br = 3.0
 
     def update(self, _, state, flat_output):
         """
         Compute the control command using the neural network.
-        
+
         Inputs:
             t, current time in seconds
             state, current state with keys:
@@ -94,7 +94,7 @@ class PolicyControl(object):
                 lin_vel,
                 ang_vel,
                 self.last_actions
-            ]), 
+            ]),
             dtype=torch.float32,
             device=self.device
         ).unsqueeze(0)  # Add batch dimension
