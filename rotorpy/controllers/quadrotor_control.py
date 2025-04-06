@@ -192,10 +192,10 @@ class SE3ControlCTBR(object):
         self.g = 9.81 # m/s^2
 
         # Gains
-        self.kp_pos = np.array([6.5,6.5,15])
+        self.kp_pos = np.array([10, 10, 15])
         self.kd_pos = np.array([4.0, 4.0, 9])
         self.kp_att = 300.0
-        self.kd_att = 15.0
+        self.kd_att = 10.0
 
     def update(self, t, state, flat_output):
         """
