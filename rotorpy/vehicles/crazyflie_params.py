@@ -1,6 +1,6 @@
 """
-Physical parameters for a quadrotor. Values parameterize the inertia, motor dynamics, 
-rotor aerodynamics, parasitic drag, and rotor placement. 
+Physical parameters for a quadrotor. Values parameterize the inertia, motor dynamics,
+rotor aerodynamics, parasitic drag, and rotor placement.
 Additional sources:
     https://bitcraze.io/2015/02/measuring-propeller-rpm-part-3
     https://wiki.bitcraze.io/misc:investigations:thrust
@@ -21,19 +21,19 @@ quad_params = {
     'Iyy':  1.43e-5,    # kg*m^2
     'Izz':  2.89e-5,    # kg*m^2
     'Ixy':  0.0,        # kg*m^2
-    'Iyz':  0.0,        # kg*m^2 
+    'Iyz':  0.0,        # kg*m^2
     'Ixz':  0.0,        # kg*m^2
 
     # Geometric properties, all vectors are relative to the center of mass.
     'num_rotors': 4,                        # for looping over each actuator
-    'rotor_pos': {  
+    'rotor_pos': {
                     'r1': d*np.array([ 0.70710678118, 0.70710678118, 0]),    # Location of Rotor 1, meters
                     'r2': d*np.array([ 0.70710678118,-0.70710678118, 0]),    # Location of Rotor 2, meters
                     'r3': d*np.array([-0.70710678118,-0.70710678118, 0]),    # Location of Rotor 3, meters
                     'r4': d*np.array([-0.70710678118, 0.70710678118, 0]),    # Location of Rotor 4, meters
                  },
 
-    'rotor_directions': np.array([1,-1,1,-1]),  # This dictates the direction of the torque for each motor. 
+    'rotor_directions': np.array([1,-1,1,-1]),  # This dictates the direction of the torque for each motor.
 
     'rI': np.array([0,0,0]), # location of the IMU sensor, meters
 
