@@ -192,9 +192,9 @@ class SE3ControlCTBR(object):
         self.g = 9.81 # m/s^2
 
         # Gains
-        self.kp_pos = np.array([10, 10, 15])
+        self.kp_pos = np.array([5, 5, 9])
         self.kd_pos = np.array([4.0, 4.0, 9])
-        self.kp_att = 300.0
+        self.kp_att = 150.0
         self.kd_att = 10.0
 
     def update(self, t, state, flat_output):
@@ -243,7 +243,7 @@ class SE3ControlCTBR(object):
 
         # Get the desired force vector.
         pos_err  = state['x'] - flat_output['x']
-        dpos_err = state['v'] - flat_output['x_dot']
+        dpos_err = state['v_w'] - flat_output['x_dot']
         F_des = self.mass * (- self.kp_pos*pos_err
                              - self.kd_pos*dpos_err
                              + flat_output['x_ddot']
@@ -268,7 +268,7 @@ class SE3ControlCTBR(object):
 
         # Angular velocity error (this is oversimplified).
         w_des = np.array([0, 0, flat_output['yaw_dot']])
-        w_err = state['w'] - w_des
+        w_err = state['w_w'] - w_des
 
         # Compute command body rates by doing PD on the attitude error.
         cmd_w = -self.kp_att*att_err - self.kd_att*w_err
