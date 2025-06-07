@@ -11,7 +11,7 @@ from rotorpy.vehicles.crazyflie_params import quad_params
 
 # You will also need a controller (currently there is only one) that works for your vehicle.
 from rotorpy.controllers.quadrotor_control import SE3Control
-from rotorpy.controllers.policy_controller import PolicyControl
+from rotorpy.controllers.policy_controller import RacingPolicy
 
 # And a trajectory generator
 from rotorpy.trajectories.hover_traj import HoverTraj
@@ -33,7 +33,7 @@ model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/qu
 # An instance of the simulator can be generated as follows:
 cf2_ctbr = Multirotor(quad_params, control_abstraction='cmd_ctbr')
 # controller = SE3Control(quad_params)
-controller = PolicyControl(quad_params, model_path)
+controller = RacingPolicy(quad_params, model_path)
 traj = Point2Point(t_change_target=100)
 sim_instance = Environment(vehicle    = cf2_ctbr,
                            controller = controller,

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from rotorpy.vehicles.crazyflie_params import quad_params
 from rotorpy.learning.quadrotor_reward_functions import hover_reward
 from rotorpy.controllers.quadrotor_control import SE3Control
-from rotorpy.controllers.policy_controller import PolicyControl
+from rotorpy.controllers.policy_controller import RacingPolicy
 
 # Load the model for the appropriate epoch
 #model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/quadcopter_direct/2025-02-27_02-15-30/model_4550.pt'
@@ -14,7 +14,7 @@ model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/qu
 #model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/quadcopter_direct/2025-03-08_16-29-22/model_800_15520.pt'
 #model_path = '/home/lorenzo/Github/University/isaac_quad_sim2real/logs/rsl_rl/quadcopter_direct/2025-03-11_20-11-51/model_1650_13229.pt'
 
-policy = PolicyControl(quad_params, model_path, scale_output=False)
+policy = RacingPolicy(quad_params, model_path, scale_output=False)
 print(f"Loading model from the path {model_path}")
 
 # Set up the figure for plotting the world
