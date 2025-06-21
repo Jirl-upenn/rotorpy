@@ -27,7 +27,7 @@ class Environment():
                        mocap = None,            # mocap sensor object, if none is supplied it will choose a default mocap.
                        world        = None,     # The world object
                        estimator    = None,     # estimator object
-                       sim_rate     = 100,      # The update frequency of the simulator in Hz
+                       sim_rate     = 50,      # The update frequency of the simulator in Hz
                        safety_margin = 0.25,    # The radius of the safety region around the robot. 
                        ):
 

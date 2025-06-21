@@ -324,16 +324,15 @@ class Multirotor(object):
             cmd_moment = control['cmd_moment']  
 
         elif self.control_abstraction == 'cmd_ctbr':
-            # The controller commands collective thrust and body rates on each axis. 
+            # The controller commands collective thrust and body rates on each axis.
 
             cmd_thrust = control['cmd_thrust']
 
             # First compute the error between the desired body rates and the actual body rates given by state. 
-            w_err = state['w'] - control['cmd_w']
+            w_err = control['cmd_w'] - state['w']
 
             # Computed commanded moment based on the attitude error and body rate error
-            wdot_cmd = -self.k_w*w_err
-            cmd_moment = self.inertia@wdot_cmd
+            cmd_moment = -20 * self.k_w * self.inertia @ w_err
 
             # Now proceed with the cmd_ctbm formulation.
 
@@ -383,7 +382,7 @@ class Multirotor(object):
 
             # Compute command moment based on attitude error. 
             cmd_moment = self.inertia @ (-self.kp_att*att_err - self.kd_att*state['w']) + np.cross(state['w'], self.inertia@state['w'])
-        
+
         elif self.control_abstraction == 'cmd_acc':
             # The controller commands an acceleration vector (or thrust vector). This is equivalent to F_des in the SE3 controller. 
             F_des = control['cmd_acc']*self.mass
