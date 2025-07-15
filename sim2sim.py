@@ -72,7 +72,7 @@ sim_instance.controller.waypoints = waypoints
 # Get the path to the logs directory
 log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'logs'))
 os.makedirs(log_dir, exist_ok=True)
-video_path = os.path.join(log_dir, 'sim2sim.gif')
+video_path = os.path.join(log_dir, 'sim2sim.mp4')
 
 results = sim_instance.run(t_final        = 20,       # The maximum duration of the environment in seconds
                            use_mocap      = True,     # Boolean: determines if the controller should use the motion capture estimates. 
