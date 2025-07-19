@@ -12,7 +12,6 @@ class Actor(nn.Module):
             layers.append(nn.Linear(actor_hidden_dims[i], actor_hidden_dims[i+1]))
             layers.append(activation())
         layers.append(nn.Linear(actor_hidden_dims[-1], num_actions))
-        layers.append(nn.Tanh())
         
         self.actor = nn.Sequential(*layers)
 
@@ -20,26 +19,24 @@ class Actor(nn.Module):
         return self.actor(obs)
 
 class IsaacHoveringController:
-    def __init__(self, vehicle, model_path, waypoints, scale_output=True, device="cpu"):
+    def __init__(self, vehicle, model_path, waypoints, device="cpu", scale_output=True):
         self.quadrotor = vehicle
         self.device = torch.device(device)
         
         self.obs_dim = 23
         self.action_dim = 4
 
-        self.scale_output = scale_output
-
         self.waypoints = waypoints
         self.proximity_threshold = 0.15
 
         # Create network
-        self.model = Actor(self.obs_dim, [64, 64], self.action_dim, nn.ELU).to(self.device)
+        self.policy = Actor(self.obs_dim, [64, 64], self.action_dim, nn.ELU).to(self.device)
         # Load checkpoint
         checkpoint = torch.load(model_path, map_location=self.device)
         actor_state_dict = {k.replace('actor.', ''): v for k, v in checkpoint["model_state_dict"].items() if "actor" in k}
-        self.model.actor.load_state_dict(actor_state_dict, strict=True)
+        self.policy.actor.load_state_dict(actor_state_dict, strict=True)
 
-        self.model.eval()
+        self.policy.eval()
 
         ######  Min/max values for scaling control outputs.
         rotor_speed_max = self.quadrotor['rotor_speed_max']
@@ -56,19 +53,8 @@ class IsaacHoveringController:
         self.idx_wp = 0
         self._previous_action = torch.zeros(1, self.action_dim, device=self.device)
         
-        # From quadcopter_env.py
-        self.moment_scale = 0.01
-        Ixx = self.quadrotor['Ixx']
-        Iyy = self.quadrotor['Iyy']
-        Izz = self.quadrotor['Izz']
-        Ixy = self.quadrotor.get('Ixy', 0.0)
-        Ixz = self.quadrotor.get('Ixz', 0.0)
-        Iyz = self.quadrotor.get('Iyz', 0.0)
-        self.inertia = torch.tensor([[Ixx, Ixy, Ixz],
-                                       [Ixy, Iyy, Iyz],
-                                       [Ixz, Iyz, Izz]], dtype=torch.float32, device=self.device)
-        # P-controller for converting moment to body rates
-        self.moment_to_rate_p = 10.0
+        # Control output scaling flag
+        self.scale_output = scale_output
 
     def update(self, t, state, traj):
         """
@@ -124,7 +110,7 @@ class IsaacHoveringController:
             dim=-1,
         )
 
-        actions_tensor = self.model(obs).squeeze(0)
+        actions_tensor = self.policy(obs).squeeze(0)
         actions = actions_tensor.detach().cpu().numpy()
         actions = np.clip(actions, -1, 1)
         self._previous_action = actions_tensor.detach().unsqueeze(0)
@@ -132,37 +118,19 @@ class IsaacHoveringController:
         num_rotors = self.quadrotor['num_rotors']
 
         if self.scale_output:
-            # The policy outputs thrust and body rates, not motor speeds directly.
-            # The first action is thrust, normalized between -1 and 1.
-            # The policy from isaac sim has a different thrust mapping.
-            # From quadcopter_env.py: self._thrust[:, 0, 2] = self.cfg.thrust_to_weight * self._robot_weight * (self._actions[:, 0] + 1.0) / 2.0
-            # Assuming thrust_to_weight is around 2.0, this means thrust is roughly from 0 to 2*weight.
-            # Let's assume a thrust-to-weight of 1.9 as in the config.
-            thrust_to_weight = 1.9
-            robot_mass = self.quadrotor['mass']
-            gravity = 9.81
-            robot_weight = robot_mass * gravity
-            
-            cmd_thrust = thrust_to_weight * robot_weight * (actions[0] + 1.0) / 2.0
+            cmd_thrust = np.interp(actions[0],
+                                   [-1, 1],
+                                   [num_rotors * self.min_thrust, num_rotors * self.max_thrust])
 
-            # The policy outputs moments, but the simulator expects body rates.
-            # We can use a simple P-controller to convert moments to body rates.
-            desired_moment = self.moment_scale * torch.tensor(actions[1:], dtype=torch.float32, device=self.device)
-            
-            # w x (I @ w)
-            gyroscopic_term = torch.cross(ang_vel, self.inertia @ ang_vel)
-            
-            # Simplified: Solve for w_dot from tau = I @ w_dot, then integrate to get w
-            # More simply, use a P-controller on the moment error.
-            # Let's assume the desired body rates can be commanded from the desired moments.
-            # A better way is to compute desired angular acceleration and integrate.
-            # w_dot = torch.linalg.inv(self.inertia) @ (desired_moment - gyroscopic_term)
-            # For simplicity and stability, let's use a proportional mapping.
-            desired_body_rates = self.moment_to_rate_p * desired_moment
-
-            roll_br = np.clip(desired_body_rates[0].item(), -self.max_roll_br, self.max_roll_br)
-            pitch_br = np.clip(desired_body_rates[1].item(), -self.max_pitch_br, self.max_pitch_br)
-            yaw_br = np.clip(desired_body_rates[2].item(), -self.max_yaw_br, self.max_yaw_br)
+            roll_br = np.interp(actions[1],
+                                [-1, 1],
+                                [-self.max_roll_br, self.max_roll_br])
+            pitch_br = np.interp(actions[2],
+                                 [-1, 1],
+                                 [-self.max_pitch_br, self.max_pitch_br])
+            yaw_br = np.interp(actions[3],
+                               [-1, 1],
+                               [-self.max_yaw_br, self.max_yaw_br])
         else:
             # If not scaling, assume actions are direct commands. This part might need adjustment.
             cmd_thrust = actions[0]
