@@ -28,6 +28,11 @@ class IsaacHoveringController:
 
         self.waypoints = waypoints
         self.proximity_threshold = 0.15
+        
+        # Initialize loss tracking
+        self.total_loss = 0.0
+        self.position_loss = 0.0
+        self.control_loss = 0.0
 
         # Create network
         self.policy = Actor(self.obs_dim, [64, 64], self.action_dim, nn.ELU).to(self.device)
@@ -55,6 +60,12 @@ class IsaacHoveringController:
         
         # Control output scaling flag
         self.scale_output = scale_output
+        
+    def reset_loss(self):
+        """Reset all accumulated loss values."""
+        self.total_loss = 0.0
+        self.position_loss = 0.0
+        self.control_loss = 0.0
 
     def update(self, t, state, traj):
         """
@@ -142,5 +153,17 @@ class IsaacHoveringController:
                          'cmd_q': np.array([1, 0, 0, 0]),
                          'cmd_motor_speeds': np.array([0, 0, 0, 0]),
                          'cmd_moment': np.array([0, 0, 0, 0])}
+        
+        # Compute loss components
+        # Position loss: distance to current waypoint
+        current_position_loss = float(dist_to_wp.detach().cpu().numpy())
+        self.position_loss += current_position_loss
+        
+        # Control loss: norm of control inputs
+        control_norm = np.sqrt(cmd_thrust**2 + roll_br**2 + pitch_br**2 + yaw_br**2)
+        self.control_loss += control_norm
+        
+        # Update total loss (sum of position and control losses)
+        self.total_loss = self.position_loss + self.control_loss
 
         return control_input

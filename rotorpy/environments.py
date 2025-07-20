@@ -133,7 +133,12 @@ class Environment():
             print('SIM TIME -- %3.2f seconds | WALL TIME -- %3.2f seconds' % (min(self.t_final, time[-1]) , (clk.time()-start_time)))
             print('EXIT STATUS -- '+exit.value)
 
-        self.result = dict(time=time, state=state, control=control, flat=flat, imu_measurements=imu_measurements, imu_gt=imu_gt, mocap_measurements=mocap_measurements, state_estimate=state_estimate, exit=exit)
+        # Add controller loss if available
+        controller_loss = None
+        if hasattr(self.controller, 'total_loss'):
+            controller_loss = self.controller.total_loss
+
+        self.result = dict(time=time, state=state, control=control, flat=flat, imu_measurements=imu_measurements, imu_gt=imu_gt, mocap_measurements=mocap_measurements, state_estimate=state_estimate, exit=exit, controller_loss=controller_loss)
 
         visualizer = Plotter(self.result, self.world)
 
