@@ -28,11 +28,20 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt     # For plotting, although the simulator has a built in plotter
 from scipy.spatial.transform import Rotation  # For doing conversions between different rotation descriptions, applying rotations, etc.
 import os                           # For path generation
+import argparse                     # For command line argument parsing
 
 """
 Instantiation
 """
-model_path = '/home/neo/workspace/logs/rsl_rl/quadcopter_direct/2025-06-04_17-01-47/model_4999.pt'
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Sim2Sim quadcopter simulation')
+parser.add_argument('--model-path', 
+                    type=str, 
+                    default='/home/neo/workspace/logs/rsl_rl/quadcopter_direct/2025-06-04_17-01-47/model_4999.pt',
+                    help='Path to the trained model file (.pt)')
+args = parser.parse_args()
+
+model_path = args.model_path
 
 waypoints = np.array([
       [ 0.0, 0.0, 1.0],
