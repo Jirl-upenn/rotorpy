@@ -2,6 +2,7 @@
 Imports
 """
 # The simulator is instantiated using the Environment class
+import json
 from rotorpy.environments import Environment
 
 # Vehicles. Currently there is only one.
@@ -90,7 +91,7 @@ else:
     log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'logs'))
 os.makedirs(log_dir, exist_ok=True)
 video_path = os.path.join(log_dir, 'sim2sim.mp4')
-csv_path = os.path.join(log_dir, 'sim2sim_results.csv')
+controller_loss_path = os.path.join(log_dir, 'results.json')
 
 results = sim_instance.run(t_final        = 20,       # The maximum duration of the environment in seconds
                            use_mocap      = True,     # Boolean: determines if the controller should use the motion capture estimates. 
@@ -105,7 +106,7 @@ results = sim_instance.run(t_final        = 20,       # The maximum duration of 
                            fname          = video_path      # Filename is specified if you want to save the animation. The save location is rotorpy/data_out/. 
                           )
 
-# Save results to CSV
-sim_instance.save_to_csv(csv_path)
-print(f"Simulation results saved to: {csv_path}")
-print(f"Video saved to: {video_path}")
+controller_loss = {"controller_loss": results["controller_loss"]}
+with open(controller_loss_path, 'w') as f:
+    json.dump(controller_loss, f, indent=2)
+print(f"Controller loss saved to: {controller_loss_path}")
