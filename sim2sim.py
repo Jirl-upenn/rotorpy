@@ -39,9 +39,14 @@ parser.add_argument('--model-path',
                     type=str, 
                     default='/home/neo/workspace/logs/rsl_rl/quadcopter_direct/2025-06-04_17-01-47/model_4999.pt',
                     help='Path to the trained model file (.pt)')
+parser.add_argument('--log-dir',
+                    type=str,
+                    default=None,
+                    help='Path to the log directory for saving results and video')
 args = parser.parse_args()
 
 model_path = args.model_path
+log_dir_arg = args.log_dir
 
 waypoints = np.array([
       [ 0.0, 0.0, 1.0],
@@ -79,9 +84,13 @@ sim_instance.vehicle.initial_state = x0
 sim_instance.controller.waypoints = waypoints
 
 # Get the path to the logs directory
-log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'logs'))
+if log_dir_arg is not None:
+    log_dir = os.path.abspath(log_dir_arg)
+else:
+    log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'logs'))
 os.makedirs(log_dir, exist_ok=True)
 video_path = os.path.join(log_dir, 'sim2sim.mp4')
+csv_path = os.path.join(log_dir, 'sim2sim_results.csv')
 
 results = sim_instance.run(t_final        = 20,       # The maximum duration of the environment in seconds
                            use_mocap      = True,     # Boolean: determines if the controller should use the motion capture estimates. 
@@ -95,3 +104,8 @@ results = sim_instance.run(t_final        = 20,       # The maximum duration of 
                            verbose        = True,     # Boolean: will print statistics regarding the simulation.
                            fname          = video_path      # Filename is specified if you want to save the animation. The save location is rotorpy/data_out/. 
                           )
+
+# Save results to CSV
+sim_instance.save_to_csv(csv_path)
+print(f"Simulation results saved to: {csv_path}")
+print(f"Video saved to: {video_path}")
