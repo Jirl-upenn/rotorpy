@@ -151,12 +151,20 @@ class Environment():
 
         if animate_bool:
             # Do animation here
-            visualizer.animate_results(fname=fname, animate_wind=animate_wind)
+            try:
+                visualizer.animate_results(fname=fname, animate_wind=animate_wind)
+            except Exception as e:
+                print("Error occured while animating:")
+                print(e)
         if plot:
             # Do plotting here
-            visualizer.plot_results(fname=fname,plot_mocap=plot_mocap,plot_estimator=plot_estimator,plot_imu=plot_imu)
-            if not animate_bool:
-                plt.show()
+            try:
+                visualizer.plot_results(fname=fname,plot_mocap=plot_mocap,plot_estimator=plot_estimator,plot_imu=plot_imu)
+                if not animate_bool:
+                    plt.show()
+            except Exception as e:
+                print("Error occured while plotting:")
+                print(e)
 
         return self.result
 
