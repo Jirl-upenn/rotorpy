@@ -18,6 +18,9 @@ from rotorpy.controllers.isaac_hovering_controller import IsaacHoveringControlle
 from rotorpy.trajectories.hover_traj import HoverTraj
 from rotorpy.trajectories.point_to_point import Point2Point
 
+# Waypoint visualization
+from rotorpy.utils.waypoint_animate import add_waypoint_visualization
+
 from scipy.spatial.transform import Rotation as R
 
 # Reference the files above for more documentation.
@@ -30,6 +33,11 @@ import matplotlib.pyplot as plt     # For plotting, although the simulator has a
 from scipy.spatial.transform import Rotation  # For doing conversions between different rotation descriptions, applying rotations, etc.
 import os                           # For path generation
 import argparse                     # For command line argument parsing
+
+# Custom animation function with waypoint visualization
+from matplotlib.animation import FuncAnimation
+from rotorpy.utils.animate import _decimate_index, ClosingFuncAnimation
+from rotorpy.utils.shapes import Quadrotor
 
 def main(args_dict):
     """
@@ -99,6 +107,10 @@ def main(args_dict):
                                verbose        = True,     # Boolean: will print statistics regarding the simulation.
                                fname          = video_path      # Filename is specified if you want to save the animation. The save location is rotorpy/data_out/. 
                               )
+    
+    # Add waypoint visualization to the saved video
+    if results is not None:
+        add_waypoint_visualization(results, waypoints, video_path)
 
     controller_loss = {"controller_loss": results["controller_loss"]}
     with open(controller_loss_path, 'w') as f:
