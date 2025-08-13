@@ -28,6 +28,7 @@ class IsaacHoveringController:
 
         self.waypoints = waypoints
         self.proximity_threshold = 0.15
+        self.wait_time_s = 1.0
         
         # Initialize loss tracking
         self.total_loss = 0.0
@@ -58,6 +59,10 @@ class IsaacHoveringController:
         self.idx_wp = 0
         self._previous_action = torch.zeros(1, self.action_dim, device=self.device)
         
+        # Timing and waypoint switching variables (matching Isaac environment logic)
+        self._previous_t = 0.0
+        self._last_waypoint_switch_time = 0.0
+        
         # Control output scaling flag
         self.scale_output = scale_output
         
@@ -86,9 +91,18 @@ class IsaacHoveringController:
         wp_curr_pos = torch.tensor(self.waypoints[self.idx_wp, :3], dtype=torch.float32, device=self.device)
 
         dist_to_wp = torch.norm(pos_drone - wp_curr_pos)
-        if dist_to_wp < self.proximity_threshold:
+        
+        # Apply Isaac environment waypoint switching logic
+        close_to_goal = dist_to_wp < self.proximity_threshold
+        slow_speed = torch.norm(lin_vel) < 0.1  # Match Isaac environment speed threshold
+        time_cond = (t - self._last_waypoint_switch_time) >= self.wait_time_s
+        should_switch = close_to_goal and slow_speed and time_cond
+        
+        if should_switch:
             self.idx_wp = (self.idx_wp + 1) % self.waypoints.shape[0]
             wp_curr_pos = torch.tensor(self.waypoints[self.idx_wp, :3], dtype=torch.float32, device=self.device)
+            self._last_waypoint_switch_time = t
+            print(f"[INFO] Switched to waypoint {self.idx_wp}: {wp_curr_pos.cpu().numpy()} at time {t:.2f}s")
 
         # Observation construction based on quadcopter_env.py
         # 1. absolute height (1)
