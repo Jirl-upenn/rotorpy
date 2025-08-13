@@ -14,7 +14,7 @@ from rotorpy.world import World
 
 
 def animate_with_waypoints(time, position, rotation, wind, animate_wind, world, waypoints, 
-                          filename=None, blit=False, show_axes=True, close_on_finish=False):
+                          waypoint_history=None, filename=None, blit=False, show_axes=True, close_on_finish=False):
     """
     Custom animation function that adds red waypoint markers and highlights the current waypoint.
     Based on rotorpy.utils.animate.animate but with waypoint visualization.
@@ -27,6 +27,7 @@ def animate_with_waypoints(time, position, rotation, wind, animate_wind, world, 
         animate_wind: bool, whether to show wind arrows
         world: World object for drawing environment
         waypoints: (K,3) array of waypoint positions
+        waypoint_history: list of (time, waypoint_index) tuples from controller
         filename: str, filename to save animation
         blit: bool, use blitting for faster animation
         show_axes: bool, whether to show 3D axes
@@ -93,21 +94,19 @@ def animate_with_waypoints(time, position, rotation, wind, animate_wind, world, 
         return world_artists + waypoint_artists + [title_artist] + [q.artists for q in quads]
 
     def update(frame):
-        # Estimate current waypoint based on drone proximity
+        # Get current waypoint from controller history
         current_wp_idx = 0
-        if len(waypoints) > 0:
-            drone_pos = position[frame, 0, :]  # First drone position
-            distances = [np.linalg.norm(drone_pos - wp) for wp in waypoints]
-            
-            # Simple heuristic: find closest waypoint within reasonable distance
-            min_distance = min(distances)
-            if min_distance < 1.0:  # Within reasonable range
-                current_wp_idx = np.argmin(distances)
-            else:
-                # If not close to any waypoint, estimate based on progression
-                # This is a simple time-based estimation
-                progress = (frame / len(time)) * len(waypoints)
-                current_wp_idx = min(int(progress), len(waypoints) - 1)
+        if waypoint_history and len(waypoints) > 0:
+            current_time = time[frame]
+            # Find the most recent waypoint change before or at current time
+            for hist_time, wp_idx in waypoint_history:
+                if hist_time <= current_time:
+                    current_wp_idx = wp_idx
+                else:
+                    break
+        elif len(waypoints) > 0:
+            # Fallback: if no waypoint history, use waypoint 0
+            current_wp_idx = 0
 
         # Update current waypoint highlight
         if len(waypoints) > 0:
@@ -147,7 +146,7 @@ def animate_with_waypoints(time, position, rotation, wind, animate_wind, world, 
     return ani
 
 
-def add_waypoint_visualization(results, waypoints, video_path):
+def add_waypoint_visualization(results, waypoints, video_path, waypoint_history=None):
     """
     Create a custom animation with waypoint markers and save it.
     
@@ -155,6 +154,7 @@ def add_waypoint_visualization(results, waypoints, video_path):
         results: dict, simulation results from rotorpy Environment.run()
         waypoints: (K,3) array of waypoint positions
         video_path: str, path to save the animation video
+        waypoint_history: list of (time, waypoint_index) tuples from controller
     """
     # Extract data directly from results dictionary
     time = results['time']
@@ -172,7 +172,8 @@ def add_waypoint_visualization(results, waypoints, video_path):
     
     # Create the animation with waypoints
     ani = animate_with_waypoints(time, x, R, wind, animate_wind=False, world=world, 
-                                waypoints=waypoints, filename=video_path, close_on_finish=True)
+                                waypoints=waypoints, waypoint_history=waypoint_history, 
+                                filename=video_path, close_on_finish=True)
     
     print(f"Waypoint visualization saved to: {video_path}")
     return ani

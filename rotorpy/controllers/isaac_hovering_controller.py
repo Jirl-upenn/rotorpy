@@ -66,6 +66,9 @@ class IsaacHoveringController:
         # Control output scaling flag
         self.scale_output = scale_output
         
+        # Waypoint history tracking for visualization
+        self.waypoint_history = []  # List of (time, waypoint_index) tuples
+        
     def reset_loss(self):
         """Reset all accumulated loss values."""
         self.total_loss = 0.0
@@ -103,6 +106,9 @@ class IsaacHoveringController:
             wp_curr_pos = torch.tensor(self.waypoints[self.idx_wp, :3], dtype=torch.float32, device=self.device)
             self._last_waypoint_switch_time = t
             print(f"[INFO] Switched to waypoint {self.idx_wp}: {wp_curr_pos.cpu().numpy()} at time {t:.2f}s")
+        
+        # Record current waypoint in history (for visualization)
+        self.waypoint_history.append((float(t), int(self.idx_wp)))
 
         # Observation construction based on quadcopter_env.py
         # 1. absolute height (1)
@@ -181,3 +187,12 @@ class IsaacHoveringController:
         self.total_loss = self.position_loss + self.control_loss
 
         return control_input
+    
+    def get_waypoint_history(self):
+        """
+        Get the waypoint history for visualization.
+        
+        Returns:
+            list: List of (time, waypoint_index) tuples
+        """
+        return self.waypoint_history

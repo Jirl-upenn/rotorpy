@@ -110,7 +110,9 @@ def main(args_dict):
     
     # Add waypoint visualization to the saved video
     if results is not None:
-        add_waypoint_visualization(results, waypoints, video_path)
+        # Get waypoint history from controller
+        waypoint_history = controller.get_waypoint_history()
+        add_waypoint_visualization(results, waypoints, video_path, waypoint_history)
 
     controller_loss = {"controller_loss": results["controller_loss"]}
     with open(controller_loss_path, 'w') as f:
