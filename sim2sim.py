@@ -47,9 +47,11 @@ def main(args_dict):
         args_dict (dict): Dictionary containing CLI arguments with keys:
             - model_path (str): Path to the trained model file (.pt)
             - log_dir (str): Path to the log directory for saving results and video
+            - duration (float): Simulation duration in seconds
     """
     model_path = args_dict.get('model_path', '/home/neo/workspace/logs/rsl_rl/quadcopter_direct/2025-06-04_17-01-47/model_4999.pt')
     log_dir_arg = args_dict.get('log_dir', None)
+    duration = args_dict.get('duration', 20.0)
 
     waypoints = np.array([
           [ 0.0, 0.0, 1.0],
@@ -95,7 +97,7 @@ def main(args_dict):
     video_path = os.path.join(log_dir, 'sim2sim.mp4')
     controller_loss_path = os.path.join(log_dir, 'results.json')
 
-    results = sim_instance.run(t_final        = 20,       # The maximum duration of the environment in seconds
+    results = sim_instance.run(t_final        = duration, # The maximum duration of the environment in seconds
                                use_mocap      = True,     # Boolean: determines if the controller should use the motion capture estimates. 
                                terminate      = False,    # Boolean: if this is true, the simulator will terminate when it reaches the last waypoint.
                                plot           = False,     # Boolean: plots the vehicle states and commands
@@ -134,12 +136,17 @@ if __name__ == "__main__":
                         type=str,
                         default=None,
                         help='Path to the log directory for saving results and video')
+    parser.add_argument('--duration',
+                        type=float,
+                        default=20.0,
+                        help='Simulation duration in seconds')
     args = parser.parse_args()
     
     # Convert argparse namespace to dictionary
     args_dict = {
         'model_path': args.model_path,
-        'log_dir': args.log_dir
+        'log_dir': args.log_dir,
+        'duration': args.duration
     }
     
     # Call main function
