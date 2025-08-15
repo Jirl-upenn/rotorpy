@@ -116,9 +116,9 @@ def main(args_dict):
         waypoint_history = controller.get_waypoint_history()
         add_waypoint_visualization(results, waypoints, video_path, waypoint_history)
 
-    controller_loss = {"controller_loss": results["controller_loss"]}
+    # Write the controller loss dictionary (which now contains all components)
     with open(controller_loss_path, 'w') as f:
-        json.dump(controller_loss, f, indent=2)
+        json.dump(results["controller_loss"], f, indent=2)
     print(f"Controller loss saved to: {controller_loss_path}")
 
 

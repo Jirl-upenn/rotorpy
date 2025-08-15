@@ -31,9 +31,15 @@ class IsaacHoveringController:
         self.wait_time_s = 1.0
         
         # Initialize loss tracking
-        self.total_loss = 0.0
         self.position_loss = 0.0
         self.control_loss = 0.0
+        self.waypoints_achieved = 0
+        self.total_loss = {
+            "total": 0.0,
+            "position": 0.0,
+            "control": 0.0,
+            "waypoints_achieved": 0
+        }
 
         # Create network
         self.policy = Actor(self.obs_dim, [64, 64], self.action_dim, nn.ELU).to(self.device)
@@ -71,9 +77,15 @@ class IsaacHoveringController:
         
     def reset_loss(self):
         """Reset all accumulated loss values."""
-        self.total_loss = 0.0
         self.position_loss = 0.0
         self.control_loss = 0.0
+        self.waypoints_achieved = 0
+        self.total_loss = {
+            "total": 0.0,
+            "position": 0.0,
+            "control": 0.0,
+            "waypoints_achieved": 0
+        }
 
     def update(self, t, state, traj):
         """
@@ -102,10 +114,11 @@ class IsaacHoveringController:
         should_switch = close_to_goal and slow_speed and time_cond
         
         if should_switch:
+            self.waypoints_achieved += 1
             self.idx_wp = (self.idx_wp + 1) % self.waypoints.shape[0]
             wp_curr_pos = torch.tensor(self.waypoints[self.idx_wp, :3], dtype=torch.float32, device=self.device)
             self._last_waypoint_switch_time = t
-            print(f"[INFO] Switched to waypoint {self.idx_wp}: {wp_curr_pos.cpu().numpy()} at time {t:.2f}s")
+            print(f"[INFO] Switched to waypoint {self.idx_wp}: {wp_curr_pos.cpu().numpy()} at time {t:.2f}s (Total achieved: {self.waypoints_achieved})")
         
         # Record current waypoint in history (for visualization)
         self.waypoint_history.append((float(t), int(self.idx_wp)))
@@ -183,8 +196,13 @@ class IsaacHoveringController:
         control_norm = np.sqrt(cmd_thrust**2 + roll_br**2 + pitch_br**2 + yaw_br**2)
         self.control_loss += control_norm
         
-        # Update total loss (sum of position and control losses)
-        self.total_loss = self.position_loss + self.control_loss
+        # Update total loss dictionary with all components
+        self.total_loss = {
+            "total": self.position_loss + self.control_loss,
+            "position": self.position_loss,
+            "control": self.control_loss,
+            "waypoints_achieved": self.waypoints_achieved
+        }
 
         return control_input
     
