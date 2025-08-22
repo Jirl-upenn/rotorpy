@@ -27,8 +27,8 @@ class IsaacHoveringController:
         self.action_dim = 4
 
         self.waypoints = waypoints
-        self.proximity_threshold = 0.15
-        self.wait_time_s = 1.0
+        self.proximity_threshold = 0.1
+        self.wait_time_s = 0.5
         
         # Initialize loss tracking
         self.position_loss = 0.0
@@ -59,8 +59,8 @@ class IsaacHoveringController:
         self.min_thrust = self.quadrotor['k_eta'] * rotor_speed_min**2
 
         # Set the maximum body rate on each axis (this is hand selected), rad/s
-        self.max_roll_br = self.max_pitch_br = 4.0
-        self.max_yaw_br = 2.0
+        self.max_roll_br = self.max_pitch_br = 7.0
+        self.max_yaw_br = 3.0
 
         self.idx_wp = 0
         self._previous_action = torch.zeros(1, self.action_dim, device=self.device)
